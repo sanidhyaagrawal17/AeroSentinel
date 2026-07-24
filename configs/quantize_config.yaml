@@ -1,0 +1,12 @@
+# INT8 Quantization Configuration
+
+quantization_mode: static
+fallback_to_dynamic: false
+calibration_image_dir: data/processed/train/images
+calibration_image_count: 100
+
+quant_format: QOperator
+per_channel: true
+weight_type: QInt8
+activation_type: QUInt8
+optimize_model: true
