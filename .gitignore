@@ -1,0 +1,55 @@
+# Data (Do not push datasets)
+data/raw/
+data/processed/
+*.zip
+
+# Models
+# We ignore intermediate models, but explicitly allow the final INT8 edge model
+models/*.pt
+models/*.onnx
+!models/aerosentinel_int8.onnx
+
+# Training runs
+runs/
+
+# Outputs & Reports
+outputs/
+*.pdf
+!docs/*.pdf  # Keep template PDFs
+
+# Python & Caches
+__pycache__/
+*.pyc
+*.pyo
+.eggs/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.streamlit/
+
+# Environment
+.env
+.venv/
+env/
+venv/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Demo recordings (large files)
+demo/recording/*.mp4
+demo/recording/*.webm
+
+# Temp/Scratch files
+docs/dump_*.py
+docs/nb_cell_*.txt
+scratch/

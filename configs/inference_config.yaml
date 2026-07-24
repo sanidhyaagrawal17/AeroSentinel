@@ -1,0 +1,18 @@
+# Inference and Post-processing Configuration
+
+model_path: "models/aerosentinel_int8.onnx"
+img_size: 640
+conf_threshold: 0.25
+iou_threshold: 0.45
+
+# Severity triage heuristic rules (area threshold in pixels)
+severity_rules:
+  critical:
+    min_confidence: 0.80
+    min_area: 5000
+  medium:
+    min_confidence: 0.60
+    min_area: 2000
+  low:
+    min_confidence: 0.25
+    min_area: 0

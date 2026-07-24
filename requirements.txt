@@ -1,0 +1,29 @@
+# AeroSentinel — Python Dependencies
+# Team Cygnus | TATA AIG 2026
+
+# Core ML
+ultralytics
+torch
+torchvision
+onnx
+onnxruntime
+
+# Vision Pipeline
+opencv-python
+albumentations
+
+# Dashboard
+streamlit
+
+# Explainability
+grad-cam
+
+# Reporting
+fpdf2
+
+# Metrics & Utilities
+numpy
+Pillow
+pyyaml
+pandas
+roboflow

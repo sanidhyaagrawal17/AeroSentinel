@@ -1,0 +1,68 @@
+[
+  {
+    "page": 1,
+    "width": 720.0,
+    "height": 405.0,
+    "text": "TEAM CYGNUS\nTATA TECHNOLOGIES INNOVENT 2026\nAeroSentinel\nEdge-Native Intelligence for Aerospace MRO\nOffline, Real-Time Aircraft Surface Defect Detection\nMedi-Caps University, Indore\nB.Tech Computer Science — Pre-Final Year\nCategory: Edge AI  |  Aerospace MRO\n"
+  },
+  {
+    "page": 2,
+    "width": 720.0,
+    "height": 405.0,
+    "text": "The Problem\n02\nHuman Inspection Failures\nManual visual inspection is still the industry standard. Inspector \nfatigue, inconsistent hangar lighting, and subjective judgment \nlead to missed defects. Aviation safety bodies consistently cite \nhuman error during MRO as a top contributor to aircraft \nincidents.\nCloud Dependency in the Field\nAI-assisted inspection tools route imagery to centralized cloud \nservers. In remote hangars, forward operating bases, and island \nairports — where MRO is most critical — bandwidth is limited or \nabsent. Latency stretches from seconds to hours, grounding \naircraft when every minute counts.\nThe Gap: No reliable, offline-capable AI system exists for real-time MRO defect detection independent of network infrastructure.\n"
+  },
+  {
+    "page": 3,
+    "width": 720.0,
+    "height": 405.0,
+    "text": "Objective & Approach\n03\nObjective: Build a fully offline, software-defined computer vision pipeline that detects aircraft surface defects in real-time on \nstandard CPU hardware — with zero cloud or network dependency at any stage.\nEdge-First Design\nInference runs entirely on a local \nCPU using ONNX Runtime. No \ncloud calls at any stage.\nOptimized Model\nYOLOv8n fine-tuned on industrial \ndefect data, exported to INT8 \nONNX via Static PTQ for <30ms \nlatency.\nExplainability\nGrad-CAM overlays show \ntechnicians exactly what drove \neach detection — not just a \nbounding box.\nFull Workflow\nFrom image capture to offline PDF \nmaintenance report, the complete \nMRO workflow runs air-gapped.\n"
+  },
+  {
+    "page": 4,
+    "width": 720.0,
+    "height": 405.0,
+    "text": "Solution Overview — System Architecture\n04\nCamera\nCapture\nOpenCV\nPreprocessing\nCLAHE + Resize\nONNX Inference\nYOLOv8n INT8\nPost-Processing\nNMS + Severity\nDashboard\n& Report\nStreamlit + PDF\nGrad-CAM (On-Demand)\nPyTorch .pt — Explainability Layer\n100% Air-Gapped\nZero bytes leave the device. Sensitive MRO \ndata never crosses a network.\n<30ms Per Frame\nStatic INT8 PTQ locks activation ranges. \nReal-time on any i5-class CPU.\nDual-Model Design\nONNX for speed. PyTorch retained on-demand \nfor Grad-CAM explainability.\n"
+  },
+  {
+    "page": 5,
+    "width": 720.0,
+    "height": 405.0,
+    "text": "Solution Deep Dive — Dashboard & Reporting\n05\nStreamlit Dashboard (Local Browser)\nUpload Image\nLive Camera\nConfidence\nSeverity Filter\nExport PDF\n[Annotated Aircraft Frame]\nCRITICAL\n92%\nMEDIUM\n78%\nDefect Log\nTime\nClass\nConf\nSeverity\n14:32:01\nCorrosion\n92%\nCRITICAL\n14:32:04\nCrack\n78%\nMEDIUM\nLive Annotated Feed\nBounding boxes with class labels, confidence and \nseverity tier drawn per frame.\nSeverity Heatmap\nAggregated spatial risk map overlaid on aircraft \nsilhouette.\nTimestamped Defect Log\nSortable table: class, confidence, severity, bounding box \ncoordinates.\nOffline PDF Report\nfpdf2 report: aircraft ID, date, annotated images, \nsign-off block. Zero network calls.\n"
+  },
+  {
+    "page": 6,
+    "width": 720.0,
+    "height": 405.0,
+    "text": "Challenges Faced\n06\nCRITICAL\nNEU Dataset Domain Gap\nChallenge:\nNEU dataset is flat steel imagery. Aircraft surfaces are curved, \npainted, and lit differently in hangars.\nMitigation:\nHeavy Albumentations augmentation: perspective warps, CLAHE \ncontrast shifts, synthetic crack overlays, hangar lighting simulation \n— applied before training.\nCRITICAL\nGrad-CAM / ONNX Incompatibility\nChallenge:\nGrad-CAM requires PyTorch autograd graph. ONNX Runtime \ndecouples the model from PyTorch — Grad-CAM cannot run on \nONNX models.\nMitigation:\nDual-model architecture: ONNX Runtime for primary inference. \nPyTorch .pt model retained separately, loaded on-demand for \nexplainability, then unloaded to free RAM.\nMODERATE\nINT8 Quantization Accuracy Drop\nChallenge:\nStatic PTQ can degrade small-object detection (hairline cracks, \nsmall fasteners) — the exact defects that matter most.\nMitigation:\nPer-channel quantization (vs per-tensor). Decision matrix: drop \n<2% → ship; drop 2–4% → per-channel retry; drop >4% → \nescalate to QAT.\nMODERATE\nHeuristic Severity Triage\nChallenge:\nNo learned severity classifier exists for this PoC scope. Rule-based \ntriage on detection area × confidence is not aerospace-grade.\nMitigation:\nDocumented explicitly as a PoC-scope simplification. Production \npath: trained classifier head validated against ASME/SAE defect \ngrading standards.\n"
+  },
+  {
+    "page": 7,
+    "width": 720.0,
+    "height": 405.0,
+    "text": "Technical Implementation\n07\nTraining\nPyTorch + Ultralytics YOLOv8\nTransfer learning from COCO. 100-150 epochs, batch 16, \nimg 640.\nAugmentation\nAlbumentations\nPerspective warp, CLAHE, brightness, synthetic crack \noverlay.\nExport\nONNX\nFramework-agnostic model format. Dynamic axes for \nflexible input.\nQuantization\nONNX Runtime PTQ (INT8)\nStatic PTQ with CalibrationDataReader on 100 \naugmented images. Per-channel.\nInference\nONNX Runtime (CPU Provider)\n<30ms per frame. No GPU. InferenceSession + NMS \npost-processing.\nVision\nOpenCV\nResize 640×640, normalize, CLAHE on grayscale channel.\nExplainability\npytorch-grad-cam\nOn-demand. Last conv layer hook. Heatmap overlaid on \nsource frame.\nDashboard\nStreamlit\nLocal browser UI. st.cache_resource for model warmup.\nReports\nfpdf2\nOffline PDF. Header, annotated images, defect table, \nsign-off block.\n"
+  },
+  {
+    "page": 8,
+    "width": 720.0,
+    "height": 405.0,
+    "text": "Results & Impact\n08\n<30ms\nInference per frame\non CPU hardware\n85%+\nmAP@0.5 target\non test set\n~75%\nModel size reduction\nFP32 → INT8\n30-45%\nAircraft downtime\nreduction (projected)\nDiagnostic Latency Comparison\nHours → Seconds\n2-6hr cloud lag compressed to <30ms at the point of inspection.\n$10K-$150K/hr Saved\nReducing MRO turnaround directly cuts costly aircraft downtime.\nFatigue Error Eliminated\nAI maintains consistent >85% mAP regardless of shift length.\nZero Data Exposure\n"
+  },
+  {
+    "page": 9,
+    "width": 720.0,
+    "height": 405.0,
+    "text": "Future Enhancements\n10\nOpenVINO Optimization\nExport to Intel OpenVINO INT8 for x86 CPUs. \nProjected 40-50% further latency reduction over \nONNX Runtime on Intel hardware.\nQuantization-Aware Training\nIf Static PTQ accuracy drop exceeds threshold, \nretrain with simulated INT8 precision using QAT — \nforces the model to adapt to quantization during \nlearning.\nReal Aerospace Dataset\nSupplement NEU with actual aerospace inspection \nimagery (fuselage, nacelle, wing surfaces) to fully \nclose the domain gap from flat steel to curved \naircraft surfaces.\nLearned Severity Classifier\nReplace heuristic area×confidence triage with a \ntrained classifier head, validated against ASME/SAE \ndefect grading standards for production-grade \nseverity scoring.\nFleet-Level Aggregation\nExtend to multi-aircraft defect tracking across a \nfleet. Detect systemic structural patterns across \nregistration IDs over time.\nHardware Security Module\nIntegrate HSM-based authentication for report \nsigning, ensuring tamper-proof maintenance \nrecords acceptable to airworthiness regulators.\n"
+  },
+  {
+    "page": 10,
+    "width": 720.0,
+    "height": 405.0,
+    "text": "Project Plan — 14-Day PoC Roadmap\n11\nPhase 1\nDays 1–4\nData & Training\nAcquire NEU dataset\nRun augment_offline()\nFine-tune YOLOv8n/s\nEvaluate ≥90% mAP baseline\nPhase 2\nDays 5–6\nEdge Optimization\nExport to ONNX\nStatic PTQ with \nCalibrationDataReader\nValidate INT8 mAP drop <2%\nBenchmark <30ms on CPU\nPhase 3\nDays 7–9\nVision Pipeline\nOpenCV preprocessing module\nONNX Runtime InferenceSession\nHeuristic severity triage\nGrad-CAM on-demand integration\nPhase 4\nDays 10–12\nDashboard & Reports\nStreamlit local dashboard\nSeverity heatmap overlay\nTimestamped defect log\nfpdf2 offline PDF report\nPhase 5\nDays 13–15\nTesting & Demo\nEnd-to-end offline validation\nCross-platform (Win + Linux)\nrequirements.txt + setup script\n90-second demo recording\nInnoVent Timeline\nRegistration\nDeadline\n5 July 2026\nPoC Build\nComplete\n~July 2026\nVirtual POC\nPresentation\nOctober 2026\nFinal\nDemo Day\nJanuary 2027\n"
+  },
+  {
+    "page": 11,
+    "width": 720.0,
+    "height": 405.0,
+    "text": "AeroSentinel\nEdge-Native Intelligence for Aerospace MRO\nTeam Cygnus  |  Medi-Caps University, Indore  |  Tata Technologies InnoVent 2026\nOffline. Real-Time. Explainable.\nNo cloud. No latency. No missed defects.\n"
+  }
+]

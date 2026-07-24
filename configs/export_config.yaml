@@ -1,0 +1,8 @@
+# ONNX Export Settings
+
+format: onnx
+dynamic: true
+simplify: true
+imgsz: 640
+opset: 13
+half: false # Export to FP32 first, then quantize to INT8
