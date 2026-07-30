@@ -12,7 +12,7 @@ for i, page in enumerate(doc):
         'text': text
     })
     
-with open(r'd:\AeroSentinel TATA AIG 2026\docs\pdf_extract.json', 'w', encoding='utf-8') as f:
+with open(r'..'\docs\pdf_extract.json', 'w', encoding='utf-8') as f:
     json.dump(result, f, ensure_ascii=False, indent=2)
     
 print(f"Extracted {len(result)} pages")

@@ -20,7 +20,7 @@ import os
 from pathlib import Path
 
 PDF_PATH = r'D:\Downloads\AeroSentinel_InnoVent2026_Cygnus.pdf'
-OUTPUT_DIR = Path(r'd:\AeroSentinel TATA AIG 2026\docs\slide_backgrounds')
+OUTPUT_DIR = Path(r'..'\docs\slide_backgrounds')
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Step 1: Render each PDF page at high DPI as background images
@@ -62,7 +62,7 @@ for i, bg_path in enumerate(bg_paths):
 
     print(f"  Added slide {i+1}")
 
-output_pptx = Path(r'd:\AeroSentinel TATA AIG 2026\AeroSentinel_Presentation.pptx')
+output_pptx = Path(r'..'\AeroSentinel_Presentation.pptx')
 prs.save(str(output_pptx))
 print(f"\nPresentation saved to: {output_pptx}")
 print(f"Total slides: {len(prs.slides)}")

@@ -14,10 +14,10 @@ from pathlib import Path
 # 4. Run this script!
 # ==========================================
 
-API_KEY = "REDACTED_API_KEY"
+API_KEY = os.getenv("ROBOFLOW_API_KEY", "your-api-key-here")
 
 def download_dataset():
-    if API_KEY == "YOUR_API_KEY_HERE":
+    if API_KEY == "your-api-key-here":
         print("Error: You must insert your Roboflow API key into this script first.")
         print("Get it for free at https://app.roboflow.com")
         return

@@ -14,16 +14,13 @@ Training scripts, augmentation configs, and training logs.
 | `runs/` | Ultralytics training run outputs (auto-generated) |
 
 ## Training Specs
-
 - **Base model:** YOLOv8n (COCO-pretrained)
 - **Epochs:** 100–150
 - **Batch size:** 16
 - **Image size:** 640
 - **Optimizer:** SGD
 - **Target:** ≥85% mAP@0.5
-
 ## Augmentations (Albumentations)
-
 - Random brightness/contrast
 - Perspective warp
 - CLAHE
