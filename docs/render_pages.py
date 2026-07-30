@@ -1,7 +1,7 @@
 import fitz
 
 doc = fitz.open(r'D:\Downloads\AeroSentinel_InnoVent2026_Cygnus.pdf')
-out_dir = r'd:\AeroSentinel TATA AIG 2026\docs\pdf_pages'
+out_dir = r'..'\docs\pdf_pages'
 
 import os
 os.makedirs(out_dir, exist_ok=True)

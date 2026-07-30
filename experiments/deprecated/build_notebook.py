@@ -21,14 +21,14 @@ def code(source):
 md("""# \U0001f6e1\ufe0f AeroSentinel \u2014 Full Training & Optimization Pipeline
 **Team Cygnus | TATA AIG 2026**
 
-This notebook runs the complete pipeline on a **T4 GPU**:
+This notebook runs the complete pipeline on a **Kaggle T4 GPU**:
 1. Download NEU-DET dataset
 2. Apply augmentations (5x data multiplication + synthetic cracks)
 3. Train **YOLOv8n** (Nano) with optimized hyperparameters
 4. Export to ONNX
 5. INT8 quantization
 6. Evaluate mAP (FP32 vs INT8)
-7. Download artifacts
+7. Save artifacts to Kaggle output
 
 **Key Accuracy Improvements (v2):**
 - \u2705 YOLOv8n (Nano, 3.2M params) \u2014 smallest footprint, ~3.4MB INT8
@@ -37,7 +37,9 @@ This notebook runs the complete pipeline on a **T4 GPU**:
 - \u2705 Backbone freezing for first 10 epochs
 - \u2705 Mosaic + MixUp built-in augmentations
 - \u2705 300 epochs with patience=75
-- \u2705 Class-aware synthetic crack overlay (only on Crazing/Scratches)""")
+- \u2705 Class-aware synthetic crack overlay (only on Crazing/Scratches)
+
+> **Kaggle Note:** Artifacts are saved to `/kaggle/working/`. After the run completes, download them from the **Output** tab.""")
 
 # =========================== CELL 1 HEADER ===========================
 md("""---
@@ -56,7 +58,7 @@ from pathlib import Path
 from roboflow import Roboflow
 
 # --- Configuration ---
-PROJECT_ROOT = Path('/content/aerosentinel')
+PROJECT_ROOT = Path('/kaggle/working/aerosentinel')
 DATA_DIR = PROJECT_ROOT / 'data'
 RAW_DIR = DATA_DIR / 'raw'
 PROCESSED_DIR = DATA_DIR / 'processed'
@@ -66,33 +68,30 @@ for d in [PROJECT_ROOT, DATA_DIR, RAW_DIR, PROCESSED_DIR, MODELS_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
 # --- Download NEU-DET from Roboflow ---
-API_KEY = 'UbTI1Ds96GxM6b4qu77S'
+API_KEY = os.getenv('ROBOFLOW_API_KEY', 'your-api-key-here')
 
 print('Authenticating with Roboflow...')
 rf = Roboflow(api_key=API_KEY)
 project = rf.workspace('park-sung-ho').project('neu-det-object-detection')
 version = project.version(1)
 
-print(f'Downloading YOLOv8 dataset to {RAW_DIR}...')
-dataset = version.download('yolov8', location=str(RAW_DIR))
+print('Downloading YOLOv8 dataset...')
+dataset = version.download('yolov8')
+roboflow_dir = Path(dataset.location)
 
-# --- Fix nested directory structure if Roboflow created a subfolder ---
+print(f'Moving dataset from {roboflow_dir} to {RAW_DIR}...')
 for split in ['train', 'valid', 'test']:
-    split_dir = RAW_DIR / split
-    if not split_dir.exists():
-        # Look for it in subdirectories
-        for subdir in RAW_DIR.iterdir():
-            if subdir.is_dir() and (subdir / split).exists():
-                print(f'Found {split} in {subdir.name}, moving to {RAW_DIR}...')
-                shutil.move(str(subdir / split), str(RAW_DIR / split))
-                
-# Clean up any leftover empty subdirectories
-for subdir in RAW_DIR.iterdir():
-    if subdir.is_dir() and subdir.name not in ['train', 'valid', 'test']:
-        try:
-            shutil.rmtree(subdir)
-        except:
-            pass
+    src = roboflow_dir / split
+    dst = RAW_DIR / split
+    if src.exists():
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.move(str(src), str(dst))
+
+try:
+    shutil.rmtree(roboflow_dir)
+except:
+    pass
 
 # --- Verify dataset structure ---
 for split in ['train', 'valid', 'test']:
@@ -376,15 +375,15 @@ print('\\u2705 Preview saved.')""")
 
 # =========================== CELL 3 HEADER ===========================
 md("""---
-## Cell 3: Train YOLOv8n on T4 GPU
+## Cell 3: Train YOLOv8n on Kaggle T4 x2
 
 **Key changes from v1:**
 - **YOLOv8n** (Nano, 3.2M params) \u2014 smallest YOLO for ~3.4MB INT8 footprint
 - **AdamW** optimizer (lr=0.001) instead of SGD (lr=0.01) \u2014 converges better on small datasets
 - **300 epochs** with patience=75 (up from 100/50)
-- **Backbone freeze** for first 10 epochs to preserve COCO feature representations
-- **Mosaic + MixUp** augmentations enabled for extra data diversity
-- **Image size 640** (YOLO handles upscaling well with the built-in mosaic)""")
+- **Backbone freeze** for first 5 epochs to preserve COCO feature representations
+- **YOLO built-in heavy augmentations disabled** (mosaic/mixup/copy_paste/degrees=0) \u2014 offline 5x augmentation already applied
+- **Image size 640**""")
 
 # =========================== CELL 3 ===========================
 code("""# ============================================================
@@ -423,15 +422,15 @@ print('Loading YOLOv8n pre-trained model...')
 model = YOLO('yolov8n.pt')
 
 # ---- Optimized Training Configuration ----
-print('Starting training on T4 GPU with optimized hyperparameters...')
+print('Starting training on Kaggle T4 GPU with optimized hyperparameters...')
 results = model.train(
     data=str(data_yaml_path),
 
     # --- Core ---
-    epochs=300,           # Up from 100: more time to converge on small dataset
+    epochs=300,           # More time to converge on small dataset; early stopping handles the rest
     batch=16,
     imgsz=640,
-    device=0,             # T4 GPU
+    device=[0,1],         # T4 x2 GPUs on Kaggle
 
     # --- Optimizer (AdamW instead of SGD) ---
     optimizer='AdamW',    # Better convergence on small datasets vs SGD
@@ -444,20 +443,22 @@ results = model.train(
     patience=75,          # Up from 50: small dataset loss can be noisy
 
     # --- Transfer Learning ---
-    freeze=10,            # Freeze backbone for first 10 epochs
+    freeze=5,             # Freeze backbone for first 5 epochs
                           # Lets detection head adapt before full fine-tuning
 
     # --- Built-in Augmentations ---
-    mosaic=1.0,           # Mosaic: stitches 4 images together (great for small datasets)
-    mixup=0.15,           # MixUp: blends pairs of images for regularization
-    copy_paste=0.1,       # Copy-paste augmentation for object diversity
-    degrees=10.0,         # Random rotation
-    scale=0.5,            # Random scale
-    fliplr=0.5,           # Horizontal flip
-    flipud=0.3,           # Vertical flip (defects have no gravity orientation)
-    hsv_h=0.015,          # Hue augmentation
-    hsv_s=0.7,            # Saturation augmentation
-    hsv_v=0.4,            # Value/brightness augmentation
+    # DISABLED heavy augmentations: offline 5x augmentation already applied in Cell 2.
+    # Stacking mosaic/mixup on top of already-augmented images causes double-distortion.
+    mosaic=0,             # DISABLED: was 1.0 — caused double augmentation
+    mixup=0,              # DISABLED: was 0.15 — blending blurs small defects
+    copy_paste=0,         # DISABLED: was 0.1
+    degrees=0,            # DISABLED: was 10.0 — rotation on already-warped images
+    scale=0.5,            # Random scale (kept)
+    fliplr=0.5,           # Horizontal flip (kept)
+    flipud=0,             # DISABLED: was 0.3 — vertical flip compounds distortion
+    hsv_h=0.015,          # Hue augmentation (kept)
+    hsv_s=0.7,            # Saturation augmentation (kept)
+    hsv_v=0.4,            # Value/brightness augmentation (kept)
 
     # --- Output ---
     project=str(PROJECT_ROOT / 'runs'),
@@ -467,11 +468,21 @@ results = model.train(
     exist_ok=True,
 )
 
+# ---- FIX: Handle DDP multi-GPU return type ----
+# When training with device=[0,1], Ultralytics returns a dict instead of a Results object.
+# results.save_dir crashes with AttributeError on a dict. Fall back to the known path.
+if hasattr(results, 'save_dir'):
+    save_dir = Path(results.save_dir)
+else:
+    # Fallback: use the project/name path we specified in model.train()
+    save_dir = PROJECT_ROOT / 'runs' / 'aerosentinel_train_v2'
+    print(f'Note: DDP returned dict, using fallback save_dir: {save_dir}')
+
 print(f'\\n\\u2705 Training complete!')
-print(f'Best model: {results.save_dir}/weights/best.pt')
+print(f'Best model: {save_dir}/weights/best.pt')
 
 # Copy best.pt to models/
-best_pt_path = Path(results.save_dir) / 'weights' / 'best.pt'
+best_pt_path = save_dir / 'weights' / 'best.pt'
 target_pt_path = MODELS_DIR / 'best.pt'
 if best_pt_path.exists():
     shutil.copy2(best_pt_path, target_pt_path)
@@ -482,8 +493,7 @@ else:
     print(f'ERROR: best.pt not found at {best_pt_path}')
 
 # Also copy training plots
-plots_dir = Path(results.save_dir)
-for plot_file in plots_dir.glob('*.png'):
+for plot_file in save_dir.glob('*.png'):
     shutil.copy2(plot_file, PROJECT_ROOT / plot_file.name)
     print(f'Copied plot: {plot_file.name}')""")
 
@@ -524,7 +534,8 @@ else:
 
 # =========================== CELL 5 HEADER ===========================
 md("""---
-## Cell 5: Static INT8 Quantization""")
+## Cell 5: Static INT8 Quantization (QDQ FIX APPLIED)
+`quant_format` changed from `'QOperator'` to `'QDQ'`. The original format broke YOLO's detection head (DFL/concat/decode ops lack reliable quantized kernels), producing 0.0000 mAP across every class. QDQ inserts float fallback nodes for those ops. A sanity check now runs immediately after quantization to catch this failure mode before it reaches evaluation.""")
 
 # =========================== CELL 5 ===========================
 code("""# ============================================================
@@ -533,6 +544,7 @@ code("""# ============================================================
 
 import onnxruntime as ort
 from onnxruntime.quantization import quantize_static, QuantType, CalibrationDataReader
+import onnx
 
 
 class Preprocessor:
@@ -551,17 +563,14 @@ class Preprocessor:
         else:
             img0 = image_source
 
-        # CLAHE on L channel of LAB
         lab = cv2.cvtColor(img0, cv2.COLOR_BGR2LAB)
         l, a, b = cv2.split(lab)
         l_clahe = self.clahe.apply(l)
         lab_clahe = cv2.merge((l_clahe, a, b))
         img_clahe = cv2.cvtColor(lab_clahe, cv2.COLOR_LAB2BGR)
 
-        # Letterbox
         img, ratio, pad = self._letterbox(img_clahe, new_shape=(self.img_size, self.img_size))
 
-        # BGR -> RGB, HWC -> CHW
         img = img[:, :, ::-1].transpose(2, 0, 1)
         img = np.ascontiguousarray(img)
         tensor = img.astype(np.float32) / 255.0
@@ -604,33 +613,67 @@ class YoloCalibrationDataReader(CalibrationDataReader):
             return None
 
 
-# ---- Run Static Quantization ----
+# ---- Paths ----
 model_path = MODELS_DIR / 'aerosentinel.onnx'
 output_path = MODELS_DIR / 'aerosentinel_int8.onnx'
 calib_dir = PROCESSED_DIR / 'train' / 'images'
-calib_count = 200  # Increased from 100 for better calibration with YOLOv8s
+calib_count = 200
 
 print(f'Loading ONNX model: {model_path}')
 session = ort.InferenceSession(str(model_path), providers=['CPUExecutionProvider'])
 input_name = session.get_inputs()[0].name
 
+# ---- Exclude the ENTIRE detection head (all /model.22/ nodes) ----
+# Root cause (confirmed via intermediate-tensor debugging): quantizing any part of the
+# classification branch (cv3.x convs, Concat_7, Sigmoid) zeroes confidence to exactly
+# 0.0000, even when individual nodes are excluded one at a time -- QDQ boundary nodes
+# kept reappearing at each new edge. Box regression (cv2.x / DFL) is unaffected either way.
+# quant_pre_process() was tried as a prerequisite and FAILS with "Incomplete symbolic
+# shape inference" (known ONNX Runtime limitation with YOLO's dynamic-shape DFL decode
+# ops) -- skipped entirely here.
+print('Building exclusion list for detection head (/model.22/)...')
+model_check = onnx.load(str(model_path))
+nodes_to_exclude = [node.name for node in model_check.graph.node if node.name.startswith('/model.22/')]
+print(f'Excluding {len(nodes_to_exclude)} detection head nodes from quantization')
+
 print(f'Calibrating with {calib_count} images from {calib_dir}...')
 dr = YoloCalibrationDataReader(calib_dir, calib_count, input_name)
 
+print('Starting quantize_static() -- this should take 1-3 minutes...')
 quantize_static(
     model_input=str(model_path),
     model_output=str(output_path),
     calibration_data_reader=dr,
-    quant_format='QOperator',
+    quant_format='QDQ',
     per_channel=True,
     weight_type=QuantType.QInt8,
-    activation_type=QuantType.QUInt8
+    activation_type=QuantType.QUInt8,
+    nodes_to_exclude=nodes_to_exclude,
 )
+print('quantize_static() finished.')
+
+# ---- Sanity check: validate BOX outputs AND CONFIDENCE channels separately ----
+# A generic "max > 0" check is NOT sufficient -- box coordinates survive quantization
+# fine even when confidence is silently zeroed. Check both independently.
+print('Running sanity check on quantized model...')
+test_session = ort.InferenceSession(str(output_path), providers=['CPUExecutionProvider'])
+test_tensor, _, _, _ = dr.preprocessor.process(str(dr.image_files[0]))
+test_output = test_session.run(None, {input_name: test_tensor})[0]
+
+box_max = test_output[0, :4, :].max()
+conf_max = test_output[0, 4:, :].max()
+
+print(f'  Box coordinate range: [{test_output[0, :4, :].min():.4f}, {box_max:.4f}]')
+print(f'  Confidence channel range: [{test_output[0, 4:, :].min():.4f}, {conf_max:.4f}]')
+
+assert box_max > 0, 'INT8 model produced all-zero box outputs -- quantization is broken'
+assert conf_max > 0, 'INT8 model produced all-zero CONFIDENCE outputs -- classification head is broken'
+print('\\\\u2705 Sanity check passed -- both box and confidence outputs are non-zero')
 
 orig_size = os.path.getsize(model_path) / (1024 * 1024)
 quant_size = os.path.getsize(output_path) / (1024 * 1024)
 
-print(f'\\n\\u2705 Quantization complete.')
+print(f'\\\\n\\\\u2705 Quantization complete.')
 print(f'   Original size:  {orig_size:.2f} MB')
 print(f'   Quantized size: {quant_size:.2f} MB')
 print(f'   Reduction:      {(1 - quant_size/orig_size)*100:.1f}%')""")
@@ -744,7 +787,7 @@ report_lines.extend([
     '|-----------|-------|',
     '| Architecture | YOLOv8n (Nano) |',
     '| Training Epochs | 300 (with early stopping, patience=75) |',
-    '| Training Device | T4 GPU |',
+    '| Training Device | Kaggle T4 GPU |',
     '| Optimizer | AdamW (lr=0.001) |',
     '| Backbone Freeze | 10 epochs |',
     '| Data Augmentation | 5x offline + mosaic + mixup |',
@@ -766,18 +809,20 @@ print(f'  INT8 model size:   {int8_size_mb:.2f} MB')""")
 
 # =========================== CELL 7 HEADER ===========================
 md("""---
-## Cell 7: Download Artifacts""")
+## Cell 7: Save Artifacts to Kaggle Output""")
 
 # =========================== CELL 7 ===========================
 code("""# ============================================================
-# Cell 7: Download Artifacts
+# Cell 7: Save Artifacts to Kaggle Output
 # ============================================================
 
 import zipfile
-from google.colab import files
+
+# Kaggle output directory (automatically available for download after run)
+OUTPUT_DIR = Path('/kaggle/working')
 
 # Package all artifacts into a single zip
-zip_path = PROJECT_ROOT / 'aerosentinel_artifacts.zip'
+zip_path = OUTPUT_DIR / 'aerosentinel_artifacts.zip'
 
 artifacts = [
     (MODELS_DIR / 'best.pt', 'models/best.pt'),
@@ -802,15 +847,16 @@ with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         else:
             print(f'  \\u26a0\\ufe0f {arc_name} NOT FOUND, skipping')
 
+# Also copy key files directly to /kaggle/working for easy individual download
+for src, arc_name in artifacts:
+    if src.exists():
+        dst = OUTPUT_DIR / Path(arc_name).name
+        shutil.copy2(src, dst)
+
 zip_size_mb = os.path.getsize(zip_path) / (1024 * 1024)
 print(f'\\n\\U0001f4e6 Archive: {zip_path} ({zip_size_mb:.2f} MB)')
-print('\\nStarting download...')
-files.download(str(zip_path))
-print('\\n\\u2705 Done! Extract the zip and copy files into your local AeroSentinel project.')
-print('   models/best.pt  \\u2192  models/best.pt')
-print('   models/aerosentinel.onnx  \\u2192  models/aerosentinel.onnx')
-print('   models/aerosentinel_int8.onnx  \\u2192  models/aerosentinel_int8.onnx')
-print('   models/evaluation_results.md  \\u2192  models/evaluation_results.md')""")
+print(f'\\n\\u2705 Done! All artifacts saved to /kaggle/working/')
+print('To download: Click \"Save Version\" (top right) \\u2192 Save \\u2192 then go to Output tab.')""")
 
 
 # =========================== BUILD NOTEBOOK ===========================
@@ -818,18 +864,23 @@ notebook = {
     "nbformat": 4,
     "nbformat_minor": 0,
     "metadata": {
-        "colab": {
-            "provenance": [],
-            "gpuType": "T4"
-        },
         "kernelspec": {
             "name": "python3",
-            "display_name": "Python 3"
+            "display_name": "Python 3",
+            "language": "python"
         },
         "language_info": {
-            "name": "python"
+            "name": "python",
+            "version": "3.10.0"
         },
-        "accelerator": "GPU"
+        "kaggle": {
+            "accelerator": "gpu",
+            "dataSources": [],
+            "isInternetEnabled": True,
+            "language": "python",
+            "sourceType": "notebook",
+            "isGpuEnabled": True
+        }
     },
     "cells": cells
 }
@@ -843,7 +894,7 @@ for cell in notebook['cells']:
             fixed_source.append(line)
         cell['source'] = fixed_source
 
-output_path = r'd:\AeroSentinel TATA AIG 2026\training\AeroSentinel_Training.ipynb'
+output_path = 'AeroSentinel_Training.ipynb'
 with open(output_path, 'w', encoding='utf-8') as f:
     json.dump(notebook, f, indent=1, ensure_ascii=False)
 

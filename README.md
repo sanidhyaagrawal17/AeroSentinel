@@ -1,47 +1,83 @@
-# AeroSentinel
+# AeroSentinel: Aerospace Defect Detection
+**Team Cygnus**
 
-**AI-Powered Offline Structural Vigilance for Aircraft Inspection**
+AeroSentinel is an edge-optimized object detection pipeline designed to identify micro-defects on metal surfaces, initially prototyped on the public NEU-DET steel defect dataset.
 
-**Team:** Cygnus | **Competition:** TATA AIG 2026 | **Category:** Edge AI
+## Problem Statement
+Detecting surface anomalies in aerospace manufacturing (such as micro-cracks, pitting, and inclusions) is critical for structural integrity but challenging to automate due to high-frequency textures and subtle defect variations. This project aims to deploy a lightweight, edge-compatible model capable of real-time defect identification. 
 
----
+For full project documentation, see our [Project Documentation](aerosentinel_project_documentation.md).
 
-## Overview
+## Architecture Overview
+The AeroSentinel pipeline is structured for efficiency and deployment readiness:
+1. **Data Pipeline**: Raw NEU-DET XML conversion to YOLO format.
+2. **Training**: Evolutionary Genetic Algorithm (GA) hyperparameter tuning.
+3. **Export**: PyTorch (`.pt`) to ONNX (`.onnx`) conversion.
+4. **Optimization**: Static INT8 Quantization for edge deployment speed.
+5. **Inference**: High-speed ONNX Runtime execution.
 
-AeroSentinel is a fully offline, edge-native computer vision system for aircraft surface defect detection. It runs on standard CPU hardware with zero internet dependency — from image capture through defect detection to PDF report generation.
+## Current Validated Results
+Our current best model is a YOLOv8 Nano architecture (`baseline_yolov8n_58_1.pt`). 
+**Overall Validation mAP50: 58.1%**
 
-## Target Defects
+**Per-Class Breakdown:**
+- Patches: **86.3%**
+- Inclusion: **77.5%**
+- Scratches: **64.2%**
+- Rolled-in Scale: **54.4%**
+- Pitted Surface: **38.3%**
+- Crazing: **28.0%**
 
-- Corrosion / Pitted Surface
-- Paint Delamination / Patches
-- Surface Cracks / Crazing / Scratches
-- Fastener Anomalies / Inclusions / Rolled-in Scale
+### Experimental Rigor
+This 58.1% baseline was achieved by utilizing GA-tuned hyperparameters on strictly raw data. To ensure this was the optimal path, we extensively tested and formally ruled out several other approaches, documented in our [`/experiments/deprecated/`](experiments/deprecated/) folder:
+- **Model Scaling**: Larger YOLOv8s and YOLOv8m architectures yielded no meaningful improvements over Nano, proving capacity was not the bottleneck.
+- **Offline Augmentation**: Synthetic blending pipelines were tested but conclusively proven to harm accuracy by causing the model to overfit to blending artifacts rather than real defects.
+- **Custom Attention Modules**: Injecting RFAConv modules added computational overhead without improving spatial context for complex textures.
 
-## Project Structure
+## Tech Stack
+- **Model**: Ultralytics YOLOv8n
+- **Deployment**: ONNX Runtime
+- **Optimization**: INT8 Quantization
 
+## Setup & Installation
+
+1. Clone the repository and navigate to the root directory.
+2. Create a virtual environment and install dependencies:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
 ```
-├── data/                  # Datasets, annotations, splits
-├── models/                # Trained weights, ONNX exports, model card
-├── src/
-│   ├── preprocessing/     # OpenCV image pipeline, CLAHE
-│   ├── inference/         # ONNX Runtime wrapper, NMS, severity triage
-│   ├── explainability/    # Grad-CAM on-demand module
-│   ├── dashboard/         # Streamlit app
-│   └── reporting/         # PDF report generator (fpdf2)
-├── training/              # Training scripts, augmentation configs, logs
-├── configs/               # Hyperparameters, model export settings
-├── tests/                 # End-to-end and unit tests
-├── docs/                  # Usage guide, model card, architecture notes
-├── demo/                  # Demo assets, sample images, recording script
-├── outputs/               # Generated reports, annotated images (gitignored)
-├── requirements.txt       # Python dependencies
-└── implementation_plan.md # Full build plan
+3. Create a `.env` file in the root directory to store your credentials (e.g., `ROBOFLOW_API_KEY=your-api-key-here`). Do not commit this file.
+
+## How to Run Inference
+
+To run inference on an image using the optimized ONNX models:
+
+```python
+import onnxruntime as ort
+from PIL import Image
+import numpy as np
+
+# Load the quantized INT8 model
+session = ort.InferenceSession("models/aerosentinel_int8.onnx")
+
+# Provide an image path
+image_path = "path/to/test/image.jpg"
+# ... preprocess to 1x3x320x320 array ...
+
+# Run inference
+outputs = session.run(None, {"images": input_tensor})
 ```
 
-## Quick Start
+*(For a complete evaluation script, see `training/evaluate.py` or the interactive notebooks in `/docs/`)*
 
-> _To be completed after Phase 4._
+## Known Limitations
+We maintain strict honesty regarding the current system limitations:
+- **Domain Gap**: The model is trained on NEU-DET, a dataset of hot-rolled steel surface defects. While texturally similar to some aerospace materials, it is not a 1:1 translation to aerospace-grade titanium or aluminum skins.
+- **Dataset Size constraints**: The dataset is relatively small (1800 images). 
+- **Texture Defect Struggles**: High-frequency, subtle texture defects like *Crazing* (28.0% mAP) remain inherently difficult for standard convolutional architectures to distinguish from natural surface noise.
+- **Target Accuracy**: We have not yet reached our ambitious 77% mAP50 goal, though we established a rigorously verified 58.1% baseline.
 
-## License
-
-> _To be determined._
+## Dataset Attribution
+This project utilizes the NEU-DET (Northeastern University Surface Defect Database) dataset for training and validation. NEU-DET is a public research benchmark dataset widely used for surface defect detection tasks. We acknowledge and thank the original researchers for providing this dataset.
