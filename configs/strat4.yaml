@@ -1,0 +1,11 @@
+names:
+- Crazing
+- Inclusion
+- Patches
+- Pitted Surface
+- Rolled-in Scale
+- Scratches
+nc: 6
+path: .
+train: training/strat4/images/train
+val: data/processed/valid/images
