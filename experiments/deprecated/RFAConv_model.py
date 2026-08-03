@@ -107,7 +107,7 @@ class RFCBAMConv(nn.Module):
         self. get_weight = nn.Sequential(nn.Conv2d(2,1,kernel_size=3,padding=1,bias=False),nn.Sigmoid())
         self.se =  SE(in_channel)
 
-        self.conv = nn.Sequential(nn.Conv2d(in_channel,out_channel,kernel_size,stride=kernel_size),nn.BatchNorm2d(out_channel),nn.ReLu())
+        self.conv = nn.Sequential(nn.Conv2d(in_channel,out_channel,kernel_size,stride=kernel_size),nn.BatchNorm2d(out_channel),nn.ReLU())
         
     def forward(self,x):
         b,c = x.shape[0:2]

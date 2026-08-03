@@ -1,0 +1,14 @@
+path: /teamspace/studios/this_studio/data/processed/true_split
+
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 6
+names:
+  0: crazing
+  1: inclusion
+  2: patches
+  3: pitted_surface
+  4: rolled-in_scale
+  5: scratches

@@ -237,3 +237,41 @@ For the virtual PoC presentation, follow this exact sequence:
 | Reporting | fpdf2 | Offline PDF generation |
 | Metrics | scikit-learn | Precision, recall, confusion matrix |
 | Utilities | NumPy, Pillow | Array/image ops |
+
+---
+
+## Phase 8.5 — Pivot to AWS GPU Training (Cost & Time Optimized)
+
+**Status**: Planning
+**Goal**: Leverage the approved 4 vCPU AWS quota to train YOLOv9s and YOLO11n on a `g4dn.xlarge` (T4 GPU) instance, massively accelerating training compared to the Intel Xeon CPU.
+
+### User Review Required
+> [!IMPORTANT]
+> **AWS CLI is not installed locally**, so I cannot launch the instance for you. Please launch the instance manually using the AWS Console to ensure we don't accidentally leave infrastructure running and incur high costs.
+
+### Open Questions
+> [!WARNING]
+> Please follow these exact steps to launch the instance and provide the connection details.
+> 1. Go to the **AWS EC2 Console** -> **Launch Instance**.
+> 2. **Name**: `AeroSentinel-Training`
+> 3. **AMI**: Select **Ubuntu 22.04 LTS** (or a PyTorch Deep Learning AMI if you prefer).
+> 4. **Instance Type**: Select **`g4dn.xlarge`** (This exactly uses your 4 vCPU quota and provides a 16GB Tesla T4 GPU).
+> 5. **Key Pair**: Create a new key pair (e.g., `aws-key.pem`), download it, and note the path.
+> 6. **Network Settings**: Ensure **Allow SSH traffic** is checked.
+> 7. **Storage**: Increase the Root volume to **50 GB** (gp3).
+> 8. **Launch** the instance.
+> 
+> **Once it is running, please reply with:**
+> 1. The **Public IPv4 address** of the instance.
+> 2. The local **path to your downloaded `.pem` key**.
+
+### Proposed Changes
+#### [NEW] AWS SSH Configuration
+- Configure SSH locally to connect to the new AWS instance seamlessly.
+- Transfer `dataset_processed.zip` (which I have already prepared locally).
+- Run `train_yolov9s.py` and `train_yolo11n.py` sequentially.
+
+### Verification Plan
+#### Manual Verification
+- Train times should drop from ~1+ hours per epoch (on CPU) to ~2-3 minutes per epoch (on T4 GPU).
+- We will monitor the AWS dashboard to ensure we **terminate the instance immediately** after training finishes to minimize usage costs (approx $0.52/hour).

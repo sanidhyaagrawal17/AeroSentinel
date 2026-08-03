@@ -17,21 +17,21 @@ The AeroSentinel pipeline is structured for efficiency and deployment readiness:
 5. **Inference**: High-speed ONNX Runtime execution.
 
 ## Current Validated Results
-Our current best model is a YOLOv8 Nano architecture (`baseline_yolov8n_58_1.pt`). 
-**Overall Validation mAP50: 58.1%**
+Our current best model is a YOLO11 Nano architecture (`yolo11n_aws_best.pt`), which significantly outperformed YOLOv8n. 
+**Overall Validation mAP50: 61.7%**
 
 **Per-Class Breakdown:**
-- Patches: **86.3%**
-- Inclusion: **77.5%**
-- Scratches: **64.2%**
-- Rolled-in Scale: **54.4%**
-- Pitted Surface: **38.3%**
-- Crazing: **28.0%**
+- Patches: **91.7%**
+- Inclusion: **71.7%**
+- Scratches: **65.1%**
+- Rolled-in Scale: **48.0%**
+- Pitted Surface: **47.3%**
+- Crazing: **46.6%**
 
 ### Experimental Rigor
-This 58.1% baseline was achieved by utilizing GA-tuned hyperparameters on strictly raw data. To ensure this was the optimal path, we extensively tested and formally ruled out several other approaches, documented in our [`/experiments/deprecated/`](experiments/deprecated/) folder:
+This baseline was achieved by utilizing GA-tuned hyperparameters on strictly raw data. To ensure this was the optimal path, we extensively tested and formally ruled out several other approaches:
+- **Crazing Defect Bakeoff**: We attempted three focused interventions to fix the low Crazing AP (Class Balancing, Negative Sampling, and Synthetic Augmentation). All three severely degraded performance compared to the raw YOLO11n baseline.
 - **Model Scaling**: Larger YOLOv8s and YOLOv8m architectures yielded no meaningful improvements over Nano, proving capacity was not the bottleneck.
-- **Offline Augmentation**: Synthetic blending pipelines were tested but conclusively proven to harm accuracy by causing the model to overfit to blending artifacts rather than real defects.
 - **Custom Attention Modules**: Injecting RFAConv modules added computational overhead without improving spatial context for complex textures.
 
 ## Tech Stack

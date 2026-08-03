@@ -1,7 +1,13 @@
 # Data (Do not push datasets)
 data/raw/
 data/processed/
+data/crazing_negatives/
+data/crazing_augmented/
+data/crazing_only/
 *.zip
+*.tar.gz
+*.jpg
+*.png
 
 # Models
 # We ignore intermediate models, but explicitly allow the final INT8 edge model
@@ -9,13 +15,40 @@ models/*.pt
 models/*.onnx
 !models/aerosentinel_int8.onnx
 
-# Training runs
+# Training runs & Local Results
 runs/
+*.csv
+*results.csv
+*.log
 
-# Outputs & Reports
+# Deployment & Remote Server Scripts (SENSITIVE)
+# These contain IPs, usernames, or key paths for AWS and Intel DevCloud
+idc_*.py
+deploy_idc.*
+monitor_*.py
+extract.py
+remote_unzip.py
+run*.sh
+*.pem
+*.key
+
+# Experimental & Throwaway Scripts in Root
+/*.py
+/*.sh
+/*.yaml
+
+# Reports & Outputs
 outputs/
 *.pdf
 !docs/*.pdf  # Keep template PDFs
+audit_report.html
+audit_report.json
+trackA_score.txt
+aws_*_progress.md
+
+# Auto-Generated / Patched Framework Files
+ultralytics_*.py
+rfaconv_module.py
 
 # Python & Caches
 __pycache__/
@@ -53,20 +86,11 @@ demo/recording/*.webm
 docs/dump_*.py
 docs/nb_cell_*.txt
 scratch/
-
-training/strat1/
-training/strat2/
-training/strat3/
-training/strat4/
-training/strat5/
+training/
 kaggle_model/
 lightning_upload/
 yolov8n_eval/
-training/extracted_models/
 aircraft_backgrounds/
 test_dataset_output/
 test_synthetic_samples/
-metal_bg.jpg
-training/best.pt
-training/AeroSentinel_Authentic/
-training/AeroSentinel_Synthetic/
+archive/
