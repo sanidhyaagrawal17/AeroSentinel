@@ -35,7 +35,7 @@ This baseline was achieved by utilizing GA-tuned hyperparameters on strictly raw
 - **Custom Attention Modules**: Injecting RFAConv modules added computational overhead without improving spatial context for complex textures.
 
 ## Tech Stack
-- **Model**: Ultralytics YOLOv8n
+- **Model**: Ultralytics YOLO11n
 - **Deployment**: ONNX Runtime
 - **Optimization**: INT8 Quantization
 
@@ -76,8 +76,8 @@ outputs = session.run(None, {"images": input_tensor})
 We maintain strict honesty regarding the current system limitations:
 - **Domain Gap**: The model is trained on NEU-DET, a dataset of hot-rolled steel surface defects. While texturally similar to some aerospace materials, it is not a 1:1 translation to aerospace-grade titanium or aluminum skins.
 - **Dataset Size constraints**: The dataset is relatively small (1800 images). 
-- **Texture Defect Struggles**: High-frequency, subtle texture defects like *Crazing* (28.0% mAP) remain inherently difficult for standard convolutional architectures to distinguish from natural surface noise.
-- **Target Accuracy**: We have not yet reached our ambitious 77% mAP50 goal, though we established a rigorously verified 58.1% baseline.
+- **Texture Defect Struggles**: High-frequency, subtle texture defects like *Crazing* (46.6% mAP) remain inherently difficult for standard convolutional architectures to distinguish from natural surface noise.
+- **Target Accuracy**: We have not yet reached our ambitious 77% mAP50 goal, though we established a rigorously verified 61.7% baseline.
 
 ## Dataset Attribution
 This project utilizes the NEU-DET (Northeastern University Surface Defect Database) dataset for training and validation. NEU-DET is a public research benchmark dataset widely used for surface defect detection tasks. We acknowledge and thank the original researchers for providing this dataset.
