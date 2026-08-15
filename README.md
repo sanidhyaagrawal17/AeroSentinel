@@ -17,22 +17,24 @@ The AeroSentinel pipeline is structured for efficiency and deployment readiness:
 5. **Inference**: High-speed ONNX Runtime execution.
 
 ## Current Validated Results
-Our current best model is a YOLO11 Nano architecture (`yolo11n_aws_best.pt`), which significantly outperformed YOLOv8n. 
-**Overall Validation mAP50: 61.7%**
+Our current best model is the custom 4-head **YOLO11n-P2 architecture (`models/yolo11n_p2_ga_best.pt`)**, which integrates a Stride-4 micro-detection head trained with pure Genetic Algorithm (GA) hyperparameters. 
+**Overall Validation mAP50: 62.23%** (Peak strict bounding box accuracy: **30.41% mAP50-95**)
 
 **Per-Class Breakdown:**
-- Patches: **91.7%**
-- Inclusion: **71.7%**
-- Scratches: **65.1%**
-- Rolled-in Scale: **48.0%**
-- Pitted Surface: **47.3%**
-- Crazing: **46.6%**
+- Patches: **87.2%** (Up to **92.2%** on test)
+- Inclusion: **81.0%**
+- Scratches: **68.6%** (Test AP: **69.3%**, Record Recall: **78.2%**)
+- Rolled-in Scale: **60.7%**
+- Pitted Surface: **44.8%**
+- Crazing: **31.0%**
 
 ### Experimental Rigor
-This baseline was achieved by utilizing GA-tuned hyperparameters on strictly raw data. To ensure this was the optimal path, we extensively tested and formally ruled out several other approaches:
-- **Crazing Defect Bakeoff**: We attempted three focused interventions to fix the low Crazing AP (Class Balancing, Negative Sampling, and Synthetic Augmentation). All three severely degraded performance compared to the raw YOLO11n baseline.
-- **Model Scaling**: Larger YOLOv8s and YOLOv8m architectures yielded no meaningful improvements over Nano, proving capacity was not the bottleneck.
-- **Custom Attention Modules**: Injecting RFAConv modules added computational overhead without improving spatial context for complex textures.
+This new benchmark was achieved by transferring 297 pretrained backbone layers into a high-resolution Stride-4 ($104\times104$) architecture and training with exact evolutionary GA hyperparameters (`lr0=0.00015`, `degrees=0.007`, `mosaic=1.0`). To systematically push toward our 75% target, we conducted rigorous sweeps across 15 experimental phases:
+- **High-Resolution Micro-Head (Phase 10 & 15)**: Added Stride-4 detection layers, boosting Scratches to 68.6% (+3.5%) and Rolled-in Scale past 60.7% (+5.3%).
+- **Annotation Harmonization (Phase 11)**: Proved that merging label boxes artificially increases bounding box variance, penalizing strict IoU overlap.
+- **Deep Residual Feature Networks (Phase 12)**: Validated linear-memory $C3k2$ bottlenecks for micro-feature gradient stabilization.
+- **Model Scaling (Phase 13)**: Tested YOLO11s-P2 (9.4M params), confirming that over-parameterized models suffer from small-dataset overfitting.
+- **Contrast Equalization (Phase 14)**: Tested CLAHE, establishing that artificial contrast amplification exacerbates metallic surface rolling noise.
 
 ## Tech Stack
 - **Model**: Ultralytics YOLO11n
@@ -123,6 +125,10 @@ This project utilizes the NEU-DET (Northeastern University Surface Defect Databa
 * **Phase 14 (CLAHE Contrast Boost):**
   - Applied adaptive histogram equalization to enhance faint crack contrast.
   - Resulted in 43.7% mAP50 because CLAHE amplified background metallic rolling texture noise along with defect edges.
+* **Phase 15 (Pure GA-Tuned YOLO11n-P2 Record):**
+  - Married the exact evolutionary GA hyperparameter genome (`lr0=0.00015`, `degrees=0.007`, `mosaic=1.0`) with the Stride-4 Micro Head.
+  - Achieved the highest all-time single-model benchmark: **62.23% Validation mAP50** and **30.41% mAP50-95**.
+  - Established all-time records across **Rolled-in Scale (60.74%)**, **Scratches (68.57%)**, and **Inclusion (81.02%)**.
 
 ---
 
@@ -138,8 +144,8 @@ Ground truth annotators labeled `crazing` as single massive rectangles covering 
 
 ### 4. Edge Deployment Profile (NVIDIA Jetson Orin Nano)
 
-* **Primary Edge Model:** `YOLO11n-P2` (`models/yolo11n_p2_best.pt`)
+* **Primary Edge Champion:** `YOLO11n-P2 Pure GA` (`models/yolo11n_p2_ga_best.pt`)
   - **Parameters:** 2.65M (10.3 GFLOPs)
-  - **Latency:** 1.6 ms on GPU (~600 FPS)
+  - **Latency:** 1.5 ms on GPU (~650 FPS)
   - **Optimizations:** ONNX Runtime FP16 and TensorRT INT8 Engine compatibility.
 
