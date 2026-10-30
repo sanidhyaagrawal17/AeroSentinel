@@ -94,3 +94,10 @@ aircraft_backgrounds/
 test_dataset_output/
 test_synthetic_samples/
 archive/
+
+# Sensitive Local Notes & Agent History
+handoff.md
+.aider*
+.aider.chat.history.md
+.aider.input.history
+.env*
