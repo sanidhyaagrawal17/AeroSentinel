@@ -1,6 +1,19 @@
 # AeroSentinel: Aerospace Defect Detection
 **Team Cygnus**
 
+> [!IMPORTANT]
+> ### STRICT RESEARCH AUDIT & EVALUATION LICENSE (DO NOT COPY OR REPUBLISH)
+> **Copyright © 2026 Sanidhya Agrawal & Team Cygnus. All Rights Reserved.**
+>
+> This repository is made public **strictly for portfolio inspection, technical audit, and code review by recruiters, engineering managers, and technical interviewers**.
+>
+> - 🚫 **NO COPYING OR PLAGIARISM**: You are strictly prohibited from copying, transcribing, adapting, or utilizing any code, model architectures (e.g., Stride-4 P2 micro-head), training pipelines, or hyperparameter configs in university capstones, college coursework, hackathons, or competitions (e.g., SIH, InnoVent).
+> - 🚫 **NO PUBLISHING OR REDISTRIBUTION**: You may not publish, mirror, host, syndicate, or redistribute any code, trained weights (.pt, .onnx, .engine), raw benchmarks, or documentation in papers, blogs, video tutorials, or other repositories.
+> - 🚫 **NO COMMERCIAL EXPLOITATION**: All commercial usage, industrial deployment, SaaS packaging, or inclusion in training sets for commercial AI tools is strictly forbidden without written consent.
+>
+> **Violations are tracked and subject to intellectual property enforcement, DMCA takedowns, and academic ethics notifications.** Full terms: [LICENSE](LICENSE).
+
+
 AeroSentinel is an edge-optimized object detection pipeline designed to identify micro-defects on metal surfaces, initially prototyped on the public NEU-DET steel defect dataset.
 
 ## Problem Statement
@@ -149,3 +162,10 @@ Ground truth annotators labeled `crazing` as single massive rectangles covering 
   - **Latency:** 1.5 ms on GPU (~650 FPS)
   - **Optimizations:** ONNX Runtime FP16 and TensorRT INT8 Engine compatibility.
 
+
+---
+
+## License & Strict Terms of Use
+This project is licensed under a proprietary **Research Audit & Evaluation License**.
+Read-only inspection is permitted for recruitment and code auditing purposes. **Copying, publishing, academic plagiarism, competition submission, and commercial use are strictly prohibited.**
+For complete terms, review the [LICENSE](LICENSE) file.

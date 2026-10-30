@@ -1,0 +1,73 @@
+PROPRIETARY RESEARCH AUDIT & EVALUATION LICENSE
+STRICT NON-COPY, NON-PUBLISH, AND NON-PLAGIARISM RESTRICTIONS
+
+Copyright (c) 2026 Sanidhya Agrawal & Team Cygnus. All Rights Reserved.
+
+IMPORTANT - READ CAREFULLY BEFORE VIEWING, ACCESSING, OR INSPECTING THIS REPOSITORY:
+
+This repository, including all source code, model configurations, hyperparameter configurations,
+experimental pipeline scripts, neural network architectures, documentation, evaluation benchmarks,
+and associated digital assets (collectively, the "Work"), is the exclusive intellectual property
+of Sanidhya Agrawal and Team Cygnus.
+
+This Work is made publicly available for the sole and exclusive purpose of technical portfolio
+inspection, engineering evaluation, and recruitment review. By accessing or viewing this repository,
+you strictly agree to the following terms and restrictions:
+
+1. PERMITTED USE (READ-ONLY INSPECTION)
+   - You are granted a personal, revocable, non-exclusive, non-transferable, and royalty-free
+     license to view and inspect the code and documentation solely for personal educational study,
+     recruitment review, engineering assessment, or code auditing.
+   - Recruiters, hiring managers, and interviewers may evaluate the codebase to verify engineering
+     rigor, system design, and commit authenticity.
+
+2. STRICT PROHIBITION ON COPYING AND REPRODUCTION (NON-COPY RULE)
+   - You may NOT copy, reproduce, duplicate, scrape, extract, or transcribe any portion of this
+     codebase, whether in source code, compiled form, architecture design, or algorithm structure.
+   - You may NOT create derivative works, adaptations, translations, or modified versions of any
+     part of this Work.
+   - You may NOT clone, mirror, or fork this repository with the intent of presenting, utilizing,
+     or reusing the code or architectures outside of read-only portfolio evaluation.
+
+3. STRICT PROHIBITION ON PUBLICATION AND REDISTRIBUTION (NON-PUBLISH RULE)
+   - You may NOT publish, republish, broadcast, syndicate, redistribute, sublicense, lease, or
+     publicly display any code, trained model weights (.pt, .onnx, .engine), raw benchmarks,
+     figures, or text from this repository on any website, blog, social media platform, public or
+     private package manager, or other public or private repository.
+   - You may NOT author or publish technical articles, papers, tutorials, or public documentation
+     that present this architecture, experimental data, or methodology as your own or without
+     prior written consent.
+
+4. STRICT PROHIBITION ON ACADEMIC AND COMPETITION PLAGIARISM
+   - You may NOT submit, include, or present this project, its neural network modifications
+     (e.g., custom Stride-4 P2 micro-detection head, GA hyperparameter tuning, ONNX INT8 quantization),
+     or its experimental results in any:
+     a) University or college course, capstone project, or degree dissertation;
+     b) Hackathon or engineering competition (including Smart India Hackathon, TATA InnoVent,
+        or similar events);
+     c) Academic journal, conference proceeding, workshop, or pre-print repository (e.g., arXiv).
+   - Any uncredited or unauthorized submission constitutes academic fraud, intellectual property
+     theft, and an intentional breach of this License.
+
+5. PROHIBITION ON COMMERCIAL USE AND AI TRAINING
+   - Commercial use of any kind is strictly prohibited. You may NOT use this Work to develop,
+     test, or deploy commercial software, industrial inspection systems, SaaS offerings, or
+     proprietary hardware integrations.
+   - You may NOT use this code, documentation, or benchmark results to train, fine-tune, or
+     benchmark commercial AI models, automated coding assistants, or proprietary datasets without
+     explicit, written, prior authorization from the author.
+
+6. ENFORCEMENT AND VIOLATION REMEDIES
+   - Any violation of these terms immediately terminates all inspection rights under this License.
+   - The copyright holders reserve all legal rights and remedies under domestic and international
+     intellectual property laws, including formal DMCA takedown notices, notification to academic
+     and competition ethics committees, and statutory damages for willful copyright infringement.
+
+7. DISCLAIMER OF WARRANTY
+   THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+   BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+   AND NON-INFRINGEMENT. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR
+   OTHER LIABILITY ARISING FROM THE USE OF OR INABILITY TO USE THE WORK.
+
+For inquiries, permissions, or verified technical inquiries, contact:
+Sanidhya Agrawal (sanidhyaagrawal2005@gmail.com | https://linkedin.com/in/sanidhya-agrawal17)
