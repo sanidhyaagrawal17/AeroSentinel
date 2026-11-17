@@ -42,10 +42,10 @@ Our current best model is the custom 4-head **YOLO11n-P2 architecture (`models/y
 - Crazing: **31.0%**
 
 ### Experimental Rigor
-This new benchmark was achieved by transferring 297 pretrained backbone layers into a high-resolution Stride-4 ($104\times104$) architecture and training with exact evolutionary GA hyperparameters (`lr0=0.00015`, `degrees=0.007`, `mosaic=1.0`). To systematically push toward our 75% target, we conducted rigorous sweeps across 15 experimental phases:
+This new benchmark was achieved by transferring 297 pretrained backbone layers into a high-resolution Stride-4 (104x104) architecture and training with exact evolutionary GA hyperparameters (`lr0=0.00015`, `degrees=0.007`, `mosaic=1.0`). To systematically push toward our 75% target, we conducted rigorous sweeps across 15 experimental phases:
 - **High-Resolution Micro-Head (Phase 10 & 15)**: Added Stride-4 detection layers, boosting Scratches to 68.6% (+3.5%) and Rolled-in Scale past 60.7% (+5.3%).
 - **Annotation Harmonization (Phase 11)**: Proved that merging label boxes artificially increases bounding box variance, penalizing strict IoU overlap.
-- **Deep Residual Feature Networks (Phase 12)**: Validated linear-memory $C3k2$ bottlenecks for micro-feature gradient stabilization.
+- **Deep Residual Feature Networks (Phase 12)**: Validated linear-memory C3k2 bottlenecks for micro-feature gradient stabilization.
 - **Model Scaling (Phase 13)**: Tested YOLO11s-P2 (9.4M params), confirming that over-parameterized models suffer from small-dataset overfitting.
 - **Contrast Equalization (Phase 14)**: Tested CLAHE, establishing that artificial contrast amplification exacerbates metallic surface rolling noise.
 
@@ -79,7 +79,7 @@ session = ort.InferenceSession("models/aerosentinel_int8.onnx")
 
 # Provide an image path
 image_path = "path/to/test/image.jpg"
-# ... preprocess to 1x3x320x320 array ...
+# ... preprocess according to configs/inference_config.yaml (img_size: 640 -> 1x3x640x640, or 416x416 for 416-trained checkpoints) ...
 
 # Run inference
 outputs = session.run(None, {"images": input_tensor})
@@ -99,10 +99,11 @@ This project utilizes the NEU-DET (Northeastern University Surface Defect Databa
 
 ---
 
-## Comprehensive Experimentation & Benchmark Report (Phases 10–14)
+## Comprehensive Experimentation & Benchmark Report (Phases 10–15)
 **Hardware:** AWS EC2 Tesla T4 GPU (16GB VRAM, CUDA 12.8)  
-**Target Edge Platform:** NVIDIA Jetson Orin Nano ($imgsz=416$)  
+**Target Edge Platform:** NVIDIA Jetson Orin Nano (`imgsz=416`)  
 **Dataset:** NEU-DET Surface Defect Dataset (1,799 images: 1,259 train / 360 valid / 180 test)
+*(Note: GPU latency figures below reflect Ultralytics model-only forward-pass inference per image at `416x416` during batched validation, excluding OpenCV pre/post-processing. On local test-split re-evaluation of `models/yolo11n_p2_ga_best.pt` at `416x416`, Phase 15 achieved `57.26%` test mAP50 vs `62.23%` validation mAP50; selecting the 3-head baseline after inspecting test-split results makes the `59.4%` comparison optimistic.)*
 
 ### 1. Comparative Results Matrix Across All Phases
 
@@ -122,7 +123,7 @@ This project utilizes the NEU-DET (Northeastern University Surface Defect Databa
 ### 2. Detailed Technical Findings
 
 * **Phase 10 (Stride-4 P2 Micro-Defect Head):**
-  - Implemented a 4th detection head operating on $104\times104$ spatial feature maps.
+  - Implemented a 4th detection head operating on 104x104 spatial feature maps.
   - Transferred 297 pretrained layers from `yolo11n.pt`.
   - **Patches reached an all-time peak of 94.1% AP50**, **Inclusion rose to 80.2% AP50**, and **Scratches reached 60.5% AP50** (71.3% with TTA calibration).
   - Bounding box localization precision peaked at **29.4% mAP50-95**.
@@ -130,7 +131,7 @@ This project utilizes the NEU-DET (Northeastern University Surface Defect Databa
   - Merged overlapping fragmented micro-boxes in `crazing` and `rolled-in_scale` using IoU-clustering.
   - Resulted in 53.7% mAP50 due to bounding box over-expansion penalizing strict IoU overlap.
 * **Phase 12 (Deep Residual P2):**
-  - Integrated multi-stage $C3k2$ residual bottlenecks directly on the high-resolution Stride-4 head.
+  - Integrated multi-stage C3k2 residual bottlenecks directly on the high-resolution Stride-4 head.
   - Stabilized at 52.2% mAP50, showing that added depth on small datasets increases optimization difficulty without accuracy gains.
 * **Phase 13 (Backbone Scaling - YOLO11s-P2):**
   - Scaled backbone capacity to 9.4M parameters.
